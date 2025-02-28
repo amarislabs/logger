@@ -1,0 +1,40 @@
+{
+    "name": "@amarislabs/logger",
+    "version": "1.0.0",
+    "description": "Elegant logging utility built on top of Consola with additional features and styles.",
+    "author": "Yehezkiel Dio Sinolungan <yehezkieldio@proton.me>",
+    "license": "MIT",
+    "type": "module",
+    "module": "./dist/index.js",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        }
+    },
+    "scripts": {
+        "lint": "biome check src",
+        "format": "biome format . --write",
+        "typecheck": "tsc --noEmit",
+        "build": "bun run scripts/build.ts"
+    },
+    "devDependencies": {
+        "@amarislabs/bun-plugin-dts": "^1.0.0",
+        "@biomejs/biome": "^1.9.4",
+        "@types/bun": "latest",
+        "@types/node": "^22.13.5",
+        "typescript": "^5.7.3"
+    },
+    "dependencies": {
+        "consola": "^3.4.0",
+        "picocolors": "^1.1.1"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "files": ["dist"],
+    "homepage": "https://github.com/amarislabs/logger#readme",
+    "repository": "github:amarislabs/logger"
+}
