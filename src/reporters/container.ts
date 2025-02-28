@@ -38,8 +38,6 @@ export class ContainerReporter {
             }
         });
     }
-
-    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: WIP
     public log(payload: LogObject, ctx: { options: ConsolaOptions }): boolean {
         const line: string = this.formatPayload(payload, {
             columns: ctx.options.stdout?.columns || 0,
@@ -48,41 +46,66 @@ export class ContainerReporter {
         this.targetStream =
             payload.level < 2 ? ctx.options.stderr || process.stderr : ctx.options.stdout || process.stdout;
 
-        const now = Date.now();
-        const newSession = now - this.lastLogTime > (this.options.sessionDuration || 5000);
+        const now: number = Date.now();
+        const isHorizontalBar: boolean = this.isHorizontalBarMessage(payload);
+        const newSession: boolean = now - this.lastLogTime > (this.options.sessionDuration || 5000);
 
-        let output = this.firstLog || newSession ? `\n${line}` : line;
-
-        this.firstLog = false;
-
-        if (this.options.lineBreakBehavior === "none") {
-            this.lastLogType = payload.type;
-            this.lastLogTime = now;
-            return writeStream(`${output}\n`, this.targetStream);
-        }
-
-        if (this.options.lineBreakBehavior === "always" && this.lastLogType !== null) {
-            output = `\n${line}`;
-            this.lastLogType = payload.type;
-            this.lastLogTime = now;
-            return writeStream(`${output}\n`, this.targetStream);
-        }
-
-        if (this.lastLogType !== null) {
-            const differentTypes = payload.type !== this.lastLogType;
-            const significantTimeGap = now - this.lastLogTime > (this.options.lineBreakTimeThreshold || 1000);
-            const currentIsImportant = ["error", "fatal", "warn", "success", "info"].includes(payload.type);
-            const previousWasImportant = ["error", "fatal", "warn", "success", "info"].includes(this.lastLogType);
-
-            if (significantTimeGap || (differentTypes && (currentIsImportant || previousWasImportant))) {
-                output = `\n${line}`;
-            }
-        }
+        const output: string = this.formatOutputWithLineBreaks(line, payload, now, newSession, isHorizontalBar);
 
         this.lastLogType = payload.type;
         this.lastLogTime = now;
+        this.firstLog = false;
 
-        return writeStream(`${output}\n`, this.targetStream);
+        return writeStream(`${output}${isHorizontalBar ? "\n" : ""}\n`, this.targetStream);
+    }
+
+    private isHorizontalBarMessage(payload: LogObject): boolean {
+        return payload.args.length === 1 && typeof payload.args[0] === "string" && payload.args[0].startsWith("[[-]]");
+    }
+
+    private formatOutputWithLineBreaks(
+        line: string,
+        payload: LogObject,
+        now: number,
+        newSession: boolean,
+        isHorizontalBar: boolean
+    ): string {
+        if (this.firstLog || newSession) {
+            return `\n${line}`;
+        }
+
+        if (isHorizontalBar) {
+            return `\n${line}`;
+        }
+
+        // Handle different line break behaviors
+        if (this.options.lineBreakBehavior === "none") {
+            return line;
+        }
+
+        if (this.options.lineBreakBehavior === "always" && this.lastLogType !== null) {
+            return `\n${line}`;
+        }
+
+        // Handle auto line break behavior
+        if (this.lastLogType !== null && this.shouldAddLineBreak(payload, now)) {
+            return `\n${line}`;
+        }
+
+        return line;
+    }
+
+    private shouldAddLineBreak(payload: LogObject, now: number): boolean {
+        const differentTypes: boolean = payload.type !== this.lastLogType;
+        const significantTimeGap: boolean = now - this.lastLogTime > (this.options.lineBreakTimeThreshold || 1000);
+        const currentIsImportant: boolean = this.isImportantLogType(payload.type);
+        const previousWasImportant: boolean = this.isImportantLogType(this.lastLogType);
+
+        return significantTimeGap || (differentTypes && (currentIsImportant || previousWasImportant));
+    }
+
+    private isImportantLogType(type: LogType | null): boolean {
+        return type !== null && ["error", "fatal", "warn", "success", "info"].includes(type);
     }
 
     private formatPayload(payload: LogObject, opts: FormatOptions): string {
