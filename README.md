@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src=".github/assets/avatar.jpg" align="center" width="120px" height="120px">
+<img src="https://github.com/amarislabs/logger/blob/master/.github/assets/avatar.jpg" align="center" width="120px" height="120px">
 
 <h3><code>@amarislabs/logger</code></h3>
 <p>Elegant logging utilities built on top or for Consola with additional features and styles.<p>
