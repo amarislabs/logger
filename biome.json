@@ -25,7 +25,13 @@
                 "noForEach": "error",
                 "noUselessSwitchCase": "error",
                 "useFlatMap": "error",
-                "useSimplifiedLogicExpression": "off"
+                "useSimplifiedLogicExpression": "off",
+                "noExcessiveCognitiveComplexity": {
+                    "level": "warn",
+                    "options": {
+                        "maxAllowedComplexity": 30
+                    }
+                }
             },
             "correctness": {
                 "noUndeclaredDependencies": "off",
