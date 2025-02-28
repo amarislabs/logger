@@ -87,7 +87,7 @@ export class DefaultReporter {
             formatter = createTextStyle(prefix, typeColor);
         } else {
             prefix = TYPE_PREFIX[payload.type] || payload.type.toUpperCase();
-            if (!useBadge && this.options.addTypeColon) {
+            if (!useBadge && this.options.addTypeColon && this.options.dateFirstPosition) {
                 prefix = `${prefix}:`;
             }
             formatter = useBadge ? createBadgeStyle(payload, typeColor) : createTextStyle(prefix, typeColor);
