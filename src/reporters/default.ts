@@ -50,20 +50,32 @@ export class DefaultReporter {
             additional = additional.map((line: string): string => colors.dim(line));
         }
 
-        const isLogType: boolean = payload.type === "log";
-        const isBadge: boolean = (payload.badge as boolean) ?? payload.level < 2;
-
         const typeFormat: string = formatType(
             payload,
-            isBadge,
+            (payload.badge as boolean) ?? payload.level < 2,
             this.createTypeFormatter.bind(this),
             this.applyTypePadding.bind(this)
         );
 
-        const type: string = isLogType ? "" : typeFormat;
+        const type: string = payload.type === "log" ? "" : typeFormat;
         const date: string = opts.date ? formatTimestamp(payload.date) : "";
+        const lineElements: string[] = [];
 
-        return assembleLine(additional, [...(this.options.dateFirstPosition ? [date, type] : [type, date]), message]);
+        if (date) {
+            if (this.options.dateFirstPosition) {
+                lineElements.push(date);
+                if (type) lineElements.push(type);
+            } else {
+                if (type) lineElements.push(type);
+                lineElements.push(date);
+            }
+        } else if (type) {
+            lineElements.push(type);
+        }
+
+        lineElements.push(message);
+
+        return assembleLine(additional, lineElements);
     }
 
     private createTypeFormatter(payload: LogObject, typeColor: ColorName, useBadge: boolean): string {
