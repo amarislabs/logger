@@ -11,6 +11,7 @@ export interface DefaultReporterOptions {
     padding?: number;
     dateFirstPosition?: boolean;
     dimTypes?: LogType[];
+    addTypeColon?: boolean;
 }
 
 export class DefaultReporter {
@@ -21,10 +22,10 @@ export class DefaultReporter {
             padding: 6,
             dimTypes: ["trace", "verbose"],
             dateFirstPosition: true,
+            addTypeColon: false,
             ...options,
         };
     }
-
     public log(payload: LogObject, ctx: { options: ConsolaOptions }): boolean {
         const line: string = this.formatPayload(payload, {
             columns: ctx.options.stdout?.columns || 0,
@@ -52,7 +53,12 @@ export class DefaultReporter {
         const isLogType: boolean = payload.type === "log";
         const isBadge: boolean = (payload.badge as boolean) ?? payload.level < 2;
 
-        const typeFormat: string = formatType(payload, isBadge, this.createTypeFormatter, this.applyTypePadding);
+        const typeFormat: string = formatType(
+            payload,
+            isBadge,
+            this.createTypeFormatter.bind(this),
+            this.applyTypePadding.bind(this)
+        );
 
         const type: string = isLogType ? "" : typeFormat;
         const date: string = opts.date ? formatTimestamp(payload.date) : "";
@@ -69,6 +75,9 @@ export class DefaultReporter {
             formatter = createTextStyle(prefix, typeColor);
         } else {
             prefix = TYPE_PREFIX[payload.type] || payload.type.toUpperCase();
+            if (!useBadge && this.options.addTypeColon) {
+                prefix = `${prefix}:`;
+            }
             formatter = useBadge ? createBadgeStyle(payload, typeColor) : createTextStyle(prefix, typeColor);
         }
 
