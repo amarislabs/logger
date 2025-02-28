@@ -28,8 +28,7 @@
         "typescript": "^5.7.3"
     },
     "dependencies": {
-        "consola": "^3.4.0",
-        "picocolors": "^1.1.1"
+        "consola": "^3.4.0"
     },
     "publishConfig": {
         "access": "public"
