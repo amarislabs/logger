@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+# [1.1.2](https://github.com/amarislabs/logger/compare/v1.1.1...v1.1.2) (2025-03-01)
+
+## <!-- 7 -->Miscellaneous Tasks
+
+- Remove cache dir from dts plugin and fix typo in ci file ([4960ed6](https://github.com/amarislabs/logger/commit/4960ed66a61560b4c3a1d70b84919a15600911c8))
+
 # [1.1.1](https://github.com/amarislabs/logger/compare/v1.1.0...v1.1.1) (2025-03-01)
 
 ## <!-- 7 -->Miscellaneous Tasks
