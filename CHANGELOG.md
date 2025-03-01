@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+# [1.1.1](https://github.com/amarislabs/logger/compare/v1.1.0...v1.1.1) (2025-03-01)
+
+## <!-- 7 -->Miscellaneous Tasks
+
+- Remove picocolors dependency ([42e45fa](https://github.com/amarislabs/logger/commit/42e45fa7d3b30ebac831705e14831066d2aec91a))
+
 # [1.0.0](https://github.com/amarislabs/logger/tree/v1.0.0) (2025-02-28)
 
 ## <!-- 0 -->Features
