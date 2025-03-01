@@ -123,20 +123,19 @@ export class ContainerReporter {
             } else {
                 message = " ".repeat(padding) + message;
             }
+
+            additional = additional.map((line: string): string =>
+                line.startsWith("[[-]]") ? " ".repeat(1) + line : " ".repeat(padding) + line
+            );
         }
 
         message = this.processTextPatterns(message, opts.columns || 80);
         additional = additional.map((line: string): string => this.processTextPatterns(line, opts.columns || 80));
 
-        if (this.options.dimTypes?.includes(payload.type)) {
-            message = colors.dim(message);
-            additional = additional.map((line: string): string => colors.dim(line));
-        } else if (this.options.colorizeMessage) {
-            message = getColor(MESSAGE_COLOR_MAP[payload.type])(message);
-            if (additional.length > 0) {
-                additional[0] = getColor(MESSAGE_COLOR_MAP[payload.type])(additional[0]);
-            }
-        }
+        const messageColor: (text: string) => string = this.getMessageColor(payload);
+
+        message = messageColor(message);
+        additional = additional.map((line: string): string => messageColor(line));
 
         const isLogType: boolean = payload.type === "log";
         const isBadge: boolean = (payload.badge as boolean) ?? payload.level < 2;
@@ -146,6 +145,14 @@ export class ContainerReporter {
         const type: string = isLogType ? "" : typeFormat;
 
         return assembleLine(additional, [type, message]);
+    }
+
+    private getMessageColor(payload: LogObject): (text: string) => string {
+        return this.options.dimTypes?.includes(payload.type)
+            ? colors.dim
+            : this.options.colorizeMessage
+              ? getColor(MESSAGE_COLOR_MAP[payload.type])
+              : (text: string): string => text;
     }
 
     private processTextPatterns(text: string, terminalWidth: number): string {
