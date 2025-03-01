@@ -19,7 +19,7 @@ We appreciate the time and effort spent in identifying and reporting security vu
 We take security seriously and appreciate your efforts in disclosing vulnerabilities responsibly. If you discover a security issue, please report it via one of the following methods in order of preference:
 
 - If appropriate, open an issue in this repository and mark it as security-related. Please provide as much detail as possible to help us understand the issue.
-- Use the [GitHub Security Advisories](https://github.com/amarislabs/castoria/security/advisories/new) feature to create a new advisory. This allows us to track and manage vulnerabilities effectively.
+- Use the [GitHub Security Advisories](https://github.com/amarislabs/logger/security/advisories/new) feature to create a new advisory. This allows us to track and manage vulnerabilities effectively.
 - If you prefer, you can contact us at [amarislabs@proton.me](mailto:amarislabs@proton.me). Please include a detailed description of the vulnerability, steps to reproduce it, and any other relevant information.
 
 We will investigate and respond as quickly as possible, typically within 48 hours. Your patience is appreciated as we work to address the issue.
