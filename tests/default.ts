@@ -9,4 +9,3 @@ logger.level = LogLevels.verbose;
 
 logger.info("Lorem ipsum odor amet, consectetuer!");
 logger.info("Lorem ipsum odor amet, consectetuer!");
-logger.verbose("Lorem ipsum odor amet, consectetuer!\nLorem ipsum odor amet, consectetuer!");

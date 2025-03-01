@@ -207,36 +207,7 @@ export class ContainerReporter {
             const resetCode = "\x1b[0m";
 
             if (stripAnsi(text).length > maxLength) {
-                let visibleCharCount = 0;
-                let truncateIndex = 0;
-
-                for (let i = 0; i < text.length && visibleCharCount < maxLength - 3; i++) {
-                    if (text[i] === "\x1b") {
-                        while (i < text.length && text[i] !== "m") i++;
-                        continue;
-                    }
-
-                    visibleCharCount++;
-                    truncateIndex = i + 1;
-                }
-
-                // let activeStyles = "";
-                const ansiRegex = /\x1b\[[0-9;]*m/g;
-                let match: RegExpExecArray | null;
-                let styleStack: string[] = [];
-
-                while ((match = ansiRegex.exec(text.substring(0, truncateIndex))) !== null) {
-                    const code = match[0];
-                    if (code === "\x1b[0m") {
-                        styleStack = [];
-                    } else {
-                        styleStack.push(code);
-                    }
-                }
-
-                // activeStyles = styleStack.join("");
-
-                return `${text.substring(0, truncateIndex)}...${resetCode}`;
+                return this.truncateWithEllipsis(text, maxLength, resetCode);
             }
         }
 
@@ -445,5 +416,37 @@ export class ContainerReporter {
         }
 
         return " ".repeat(3) + formatter + " ".repeat(padding);
+    }
+
+    private truncateWithEllipsis(text: string, maxLength: number, resetCode: string): string {
+        let visibleCharCount = 0;
+        let truncateIndex = 0;
+
+        for (let i = 0; i < text.length && visibleCharCount < maxLength - 3; i++) {
+            if (text[i] === "\x1b") {
+                while (i < text.length && text[i] !== "m") i++;
+                continue;
+            }
+
+            visibleCharCount++;
+            truncateIndex = i + 1;
+        }
+
+        // let activeStyles = "";
+        const ansiRegex = /\x1b\[[0-9;]*m/g;
+        let match: RegExpExecArray | null;
+        let styleStack: string[] = [];
+
+        while ((match = ansiRegex.exec(text.substring(0, truncateIndex))) !== null) {
+            const code = match[0];
+            if (code === "\x1b[0m") {
+                styleStack = [];
+            } else {
+                styleStack.push(code);
+            }
+        }
+
+        // activeStyles = styleStack.join("");
+        return `${text.substring(0, truncateIndex)}...${resetCode}`;
     }
 }
