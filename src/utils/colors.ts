@@ -1,6 +1,6 @@
-import type { LogObject } from "consola";
-import { type ColorFunction, type ColorName, colors } from "consola/utils";
-import { TEXT_TYPES } from "#/utils/type-maps";
+import type { LogObject, LogType } from "consola";
+import { type ColorFunction, type ColorName, colors, stripAnsi } from "consola/utils";
+import { MESSAGE_COLOR_MAP, TEXT_TYPES } from "#/utils/type-maps";
 
 export function getColor(color: ColorName = "white"): ColorFunction {
     return colors[color] || colors.white;
@@ -27,4 +27,11 @@ export function createBadgeStyle(payloadPrefix: LogObject | string, typeColor: C
 
 export function shouldUseBadge(payload: LogObject, isBadge: boolean): boolean {
     return ["fatal", "fail"].includes(payload.type) || (!TEXT_TYPES.includes(payload.type) && isBadge);
+}
+
+export function getColorFunction(logType: string): ColorFunction {
+    const cleanedType: LogType = stripAnsi(logType.trim().toLocaleLowerCase()) as LogType;
+    const type = MESSAGE_COLOR_MAP[cleanedType];
+
+    return getColor(type ? type : "white");
 }

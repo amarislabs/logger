@@ -4,7 +4,7 @@ import { ContainerReporter } from "#/index";
 const logger = createConsola().setReporters([new ContainerReporter({ lineBreakBehavior: "always" })]);
 
 logger.info(
-    "mXvAZxsUFYWQmTMkILffGdZnhswKowiAWSlMuHNHYhlAKeCSrwyiBzlKZyKPkuJbloDZUeFrEJxcxRhMKFNEeJWtbcJudrPyZjcTcbpLDIRpbsZebCkbGrqwQjxGDNeSoWdADjbpCxnakntgSayriKqoSIItsapwigaegkhaoitapoweweweweewewew"
+    "Lorem ipsum odor amet, consectetuer!Lorem ipsum odor amet, consectetuer!Lorem ipsum odor amet, consectetuer!Lorem ipsum odor amet, consectetuer!Lorem ipsum odor amet, consectetuer!Lorem ipsum odor amet, consectetuer!Lorem ipsum odor amet, consectetuer!Lorem ipsum odor amet, consectetuer!Lorem ipsum odor amet, consectetuer!Lorem ipsum odor amet, consectetuer!Lorem ipsum odor amet, consectetuer!Lorem ipsum odor amet, consectetuer!Lorem ipsum odor amet, consectetuer!Lorem ipsum odor amet, consectetuer!Lorem ipsum odor amet, consectetuer!Lorem ipsum odor amet, consectetuer!Lorem ipsum odor amet, consectetuer!Lorem ipsum odor amet, consect"
 );
 
 logger.log(

@@ -3,7 +3,7 @@ import type { ConsolaOptions, FormatOptions, LogObject, LogType } from "consola"
 import { type ColorName, colors, stripAnsi } from "consola/utils";
 import wrap from "word-wrap";
 import { createBox, formatArgs, formatType } from "#/formatters";
-import { createBadgeStyle, createTextStyle, getColor } from "#/utils/colors";
+import { createBadgeStyle, createTextStyle, getColor, getColorFunction } from "#/utils/colors";
 import { MESSAGE_COLOR_MAP, TEXT_TYPES, TYPE_PREFIX } from "#/utils/type-maps";
 import { writeStream } from "#/utils/write-stream";
 
@@ -184,7 +184,38 @@ export class ContainerReporter {
         ].join("\n");
     }
 
-    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: WIP Implementation
+    private truncateWithEllipsis(text: string, maxLength: number, resetCode: string): string {
+        let visibleCharCount = 0;
+        let truncateIndex = 0;
+
+        for (let i = 0; i < text.length && visibleCharCount < maxLength - 3; i++) {
+            if (text[i] === "\x1b") {
+                while (i < text.length && text[i] !== "m") i++;
+                continue;
+            }
+
+            visibleCharCount++;
+            truncateIndex = i + 1;
+        }
+
+        const ansiRegex = /\x1b\[[0-9;]*m/g;
+        let match: RegExpExecArray | null;
+        let styleStack: string[] = [];
+
+        while ((match = ansiRegex.exec(text.substring(0, truncateIndex))) !== null) {
+            const code = match[0];
+            if (code === "\x1b[0m") {
+                styleStack = [];
+            } else {
+                styleStack.push(code);
+            }
+        }
+
+        const activeStyles = styleStack.join("");
+        return `${text.substring(0, truncateIndex)}...${activeStyles ? resetCode : ""}`;
+    }
+
+    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: <explanation>
     private applyWrappingWithPadding(text: string, paddingLength: number, columns: number): string {
         if (stripAnsi(text).length <= columns) {
             return text;
@@ -196,21 +227,156 @@ export class ContainerReporter {
             return match ? TEXT_TYPES.includes(match[1].toLowerCase()) : false;
         })();
 
-        /**
-         * Temporary measure for preventing wrapping of long lines with prefixes
-         * since current implementation does not handle ANSI codes perfectly for prefixes and breaks the formatting.
-         *
-         * We truncate the text to fit within the column limit and add ellipsis instead.
-         */
         if (hasPrefix) {
-            const maxLength = columns - 2;
-            const resetCode = "\x1b[0m";
-
-            if (stripAnsi(text).length > maxLength) {
+            // Extract prefix from the original text (including ANSI codes)
+            const prefixMatch = text.match(/^(\s*(?:\x1b\[[0-9;]*m)*[A-Z]+(?:\x1b\[[0-9;]*m)*\s+)/);
+            if (!prefixMatch) {
+                // If we can't identify the prefix pattern, fall back to truncation
+                const maxLength = columns - 2;
+                const resetCode = "\x1b[0m";
                 return this.truncateWithEllipsis(text, maxLength, resetCode);
             }
+
+            const prefix: string = prefixMatch[1];
+            const prefixVisibleLength = stripAnsi(prefix).length;
+            const content = text.substring(prefix.length);
+            const contentPlain = stripAnsi(content);
+
+            // Use consistent padding with 3 spaces (standard padding) + prefix length
+            const standardPadding = 3; // Match the padding used for non-prefixed text
+            const padding: string = " ".repeat(prefixVisibleLength);
+
+            // Extract the active color at the end of the prefix to maintain color continuity
+            let activeColor = "";
+            const ansiRegex = /\x1b\[[0-9;]*m/g;
+            let match: RegExpExecArray | null;
+            let lastColorCode = "";
+
+            // Find the last color code in the prefix
+            while ((match = ansiRegex.exec(prefix)) !== null) {
+                if (match[0] === "\x1b[0m") {
+                    lastColorCode = "";
+                } else {
+                    lastColorCode = match[0];
+                }
+            }
+
+            // Use the last color code as the active color if it exists
+            if (lastColorCode) {
+                activeColor = lastColorCode;
+            }
+
+            // Find all active colors in the content for maintaining colors in wrapped lines
+            const contentColorCodes: string[] = [];
+            ansiRegex.lastIndex = 0;
+            while ((match = ansiRegex.exec(content)) !== null) {
+                const code = match[0];
+                if (code === "\x1b[0m") {
+                    contentColorCodes.length = 0; // Reset color stack
+                } else if (/\x1b\[([34][0-9]|9[0-7])m/.test(code)) {
+                    // Replace any existing foreground color
+                    contentColorCodes.push(code);
+                }
+            }
+
+            // If we found color codes in content, use the last one instead of prefix color
+            if (contentColorCodes.length > 0) {
+                activeColor = contentColorCodes[contentColorCodes.length - 1];
+            }
+
+            // Store all ANSI codes in the content
+            const ansiCodes: { index: number; code: string }[] = [];
+
+            // Reset match to scan content ANSI codes
+            ansiRegex.lastIndex = 0;
+
+            // Find all ANSI codes in the content
+            while ((match = ansiRegex.exec(content)) !== null) {
+                ansiCodes.push({
+                    index: match.index,
+                    code: match[0],
+                });
+            }
+
+            const wrappedContentPlain = wrap(contentPlain, {
+                width: columns - prefixVisibleLength,
+                indent: "",
+                trim: true,
+            });
+
+            const wrappedLines = wrappedContentPlain.split("\n");
+            const resultLines: string[] = [];
+
+            if (wrappedLines.length > 0) {
+                // Process first line - keep the prefix but remove padding from wrapped content
+                resultLines.push(prefix + (activeColor || "") + stripAnsi(wrappedLines[0].substring(padding.length)));
+                const messageColorFn = getColorFunction(stripAnsi(prefix));
+
+                // Process subsequent lines with consistent padding and color
+                for (let i = 1; i < wrappedLines.length; i++) {
+                    const wrappedLine = wrappedLines[i];
+                    // Apply color using the color function instead of raw ANSI codes
+                    resultLines.push(" ".repeat(standardPadding) + messageColorFn(wrappedLine));
+                }
+            }
+
+            let plainTextIndex = 0;
+            let resultLineIndex = 0;
+            let posInResultLine = resultLines[0].indexOf(stripAnsi(wrappedLines[0].substring(padding.length)));
+
+            ansiCodes.sort((a, b) => a.index - b.index);
+
+            let currentStyles = activeColor || "";
+            for (const { index, code } of ansiCodes) {
+                if (code === "\x1b[0m") {
+                    currentStyles = "";
+                } else {
+                    currentStyles = this.updateActiveStyles(currentStyles, code);
+                }
+
+                const visibleCharsToAdvance = this.countVisibleChars(content.substring(0, index));
+
+                for (let i = 0; i < visibleCharsToAdvance; i++) {
+                    plainTextIndex++;
+                    posInResultLine++;
+
+                    if (
+                        posInResultLine >= stripAnsi(resultLines[resultLineIndex]).length &&
+                        resultLineIndex < resultLines.length - 1
+                    ) {
+                        resultLineIndex++;
+                        posInResultLine = standardPadding; // Start after padding
+
+                        // Apply current styles to the beginning of the next line
+                        if (currentStyles && !resultLines[resultLineIndex].startsWith(currentStyles)) {
+                            resultLines[resultLineIndex] =
+                                resultLines[resultLineIndex].substring(0, standardPadding) +
+                                currentStyles +
+                                resultLines[resultLineIndex].substring(standardPadding);
+                        }
+                    }
+                }
+
+                // Insert the ANSI code at the current position
+                if (resultLineIndex < resultLines.length) {
+                    const line = resultLines[resultLineIndex];
+                    resultLines[resultLineIndex] =
+                        line.substring(0, posInResultLine) + code + line.substring(posInResultLine);
+                }
+            }
+
+            // Ensure each line ends with a reset code
+            const resetCode = "\x1b[0m";
+            for (let i = 0; i < resultLines.length; i++) {
+                if (!resultLines[i].endsWith(resetCode)) {
+                    resultLines[i] += resetCode;
+                }
+            }
+
+            return resultLines.join("\n");
         }
 
+        // Existing code for non-prefixed text continues...
         const padding: string = " ".repeat(paddingLength);
 
         const ansiCodes: { index: number; code: string; isReset: boolean; isStyle: boolean }[] = [];
@@ -230,6 +396,7 @@ export class ContainerReporter {
             });
         }
 
+        // Rest of the existing implementation for non-prefixed text...
         let prefix = "";
         let contentToWrap: string = plainText;
         const initialPaddingMatch: RegExpMatchArray | null = plainText.match(/^(\s+)/);
@@ -330,6 +497,52 @@ export class ContainerReporter {
         return resultLines.join("\n");
     }
 
+    private updateActiveStyles(currentStyles: string, newCode: string): string {
+        let _currentStyles = currentStyles;
+
+        // Handle foreground color codes
+        if (/\x1b\[([34][0-9]|9[0-7])m/.test(newCode)) {
+            // Remove any existing foreground color
+            _currentStyles = _currentStyles.replace(/\x1b\[([34][0-9]|9[0-7])m/g, "");
+            _currentStyles += newCode;
+        }
+        // Handle background color codes
+        else if (/\x1b\[([45][0-9]|10[0-7])m/.test(newCode)) {
+            // Remove any existing background color
+            _currentStyles = _currentStyles.replace(/\x1b\[([45][0-9]|10[0-7])m/g, "");
+            _currentStyles += newCode;
+        }
+        // Handle text style codes
+        else if (/\x1b\[(1|2|3|4|7|8|9)m/.test(newCode)) {
+            if (!_currentStyles.includes(newCode)) {
+                _currentStyles += newCode;
+            }
+        }
+        // Handle style reset codes
+        else if (/\x1b\[(22|23|24|27|28|29)m/.test(newCode)) {
+            // Remove corresponding style codes
+            if (newCode === "\x1b[22m") {
+                _currentStyles = _currentStyles.replace(/\x1b\[(1|2)m/g, "");
+            } else if (newCode === "\x1b[23m") {
+                _currentStyles = _currentStyles.replace(/\x1b\[3m/g, "");
+            } else if (newCode === "\x1b[24m") {
+                _currentStyles = _currentStyles.replace(/\x1b\[4m/g, "");
+            } else if (newCode === "\x1b[27m") {
+                _currentStyles = _currentStyles.replace(/\x1b\[7m/g, "");
+            } else if (newCode === "\x1b[28m") {
+                _currentStyles = _currentStyles.replace(/\x1b\[8m/g, "");
+            } else if (newCode === "\x1b[29m") {
+                _currentStyles = _currentStyles.replace(/\x1b\[9m/g, "");
+            }
+        }
+
+        return _currentStyles;
+    }
+
+    private countVisibleChars(text: string): number {
+        return stripAnsi(text).length;
+    }
+
     private isResetForStyle(resetCode: string, styleCode: string): boolean {
         const resetMap: { [key: string]: string[] } = {
             "\x1b[22m": ["\x1b[1m", "\x1b[2m"], // Reset for bold and dim
@@ -418,7 +631,7 @@ export class ContainerReporter {
         return " ".repeat(3) + formatter + " ".repeat(padding);
     }
 
-    private truncateWithEllipsis(text: string, maxLength: number, resetCode: string): string {
+    private _truncateWithEllipsis(text: string, maxLength: number, resetCode: string): string {
         let visibleCharCount = 0;
         let truncateIndex = 0;
 
