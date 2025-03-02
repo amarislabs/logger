@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+# [1.2.1](https://github.com/amarislabs/logger/compare/v1.2.0...v1.2.1) (2025-03-02)
+
+## <!-- 0 -->Features
+
+- **type-maps:** Add verbose type to type maps ([7efd30c](https://github.com/amarislabs/logger/commit/7efd30c98fba5c01879bf317684f709872c92006))
+
 # [1.2.0](https://github.com/amarislabs/logger/compare/v1.1.2...v1.2.0) (2025-03-02)
 
 ## <!-- 0 -->Features
