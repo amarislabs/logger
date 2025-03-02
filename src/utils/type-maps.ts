@@ -32,6 +32,7 @@ export const TYPE_PREFIX: { [k in LogType]?: string } = {
     fail: "FAIL",
     start: "START",
     log: "",
+    verbose: "VERBOSE",
 };
 
 export const TYPE_COLOR_MAP: { [k in LogType]?: ColorName } = {
@@ -46,6 +47,7 @@ export const TYPE_COLOR_MAP: { [k in LogType]?: ColorName } = {
     fail: "red",
     start: "blue",
     log: "white",
+    verbose: "gray",
 };
 
 export const MESSAGE_COLOR_MAP: { [k in LogType]?: ColorName } = {
@@ -60,6 +62,7 @@ export const MESSAGE_COLOR_MAP: { [k in LogType]?: ColorName } = {
     fail: "red",
     start: "blue",
     log: "gray",
+    verbose: "gray",
 };
 
 export const CONTAINER_TYPE_PREFIX: { [k in LogType]?: string } = {
