@@ -53,7 +53,8 @@ export class DefaultReporter {
         const typeFormat: string = formatType(
             payload,
             (payload.badge as boolean) ?? payload.level < 2,
-            this.createTypeFormatter.bind(this),
+            (payload: LogObject, typeColor: ColorName, useBadge: boolean): string =>
+                this.createTypeFormatter(payload, opts, typeColor, useBadge),
             this.applyTypePadding.bind(this)
         );
 
@@ -78,7 +79,12 @@ export class DefaultReporter {
         return assembleLine(additional, lineElements);
     }
 
-    private createTypeFormatter(payload: LogObject, typeColor: ColorName, useBadge: boolean): string {
+    private createTypeFormatter(
+        payload: LogObject,
+        opts: FormatOptions,
+        typeColor: ColorName,
+        useBadge: boolean
+    ): string {
         let prefix: string;
         let formatter: string;
 
@@ -87,7 +93,12 @@ export class DefaultReporter {
             formatter = createTextStyle(prefix, typeColor);
         } else {
             prefix = TYPE_PREFIX[payload.type] || payload.type.toUpperCase();
-            if (!useBadge && this.options.addTypeColon && this.options.dateFirstPosition) {
+
+            // Case 1: formatOptions date true but dateFirstPosition true -> add colon
+            // Case 2: formatOptions date false but dateFirstPosition true -> add colon
+            // Case 3: formatOptions date false but dateFirstPosition false -> add colon
+            // Case 4: formatOptions date true but dateFirstPosition false -> don't add colon
+            if (!useBadge && this.options.addTypeColon && !(opts.date && !this.options.dateFirstPosition)) {
                 prefix = `${prefix}:`;
             }
             formatter = useBadge ? createBadgeStyle(payload, typeColor) : createTextStyle(prefix, typeColor);
