@@ -33,5 +33,5 @@ export function getColorFunction(logType: string): ColorFunction {
     const cleanedType: LogType = stripAnsi(logType.trim().toLocaleLowerCase()) as LogType;
     const type = MESSAGE_COLOR_MAP[cleanedType];
 
-    return getColor(type ? type : "white");
+    return getColor(type ? type : "gray");
 }
