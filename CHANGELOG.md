@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+# [1.2.0](https://github.com/amarislabs/logger/compare/v1.1.2...v1.2.0) (2025-03-02)
+
+## <!-- 0 -->Features
+
+- **container:** Implement text wrapping with padding for container ([2f4a52c](https://github.com/amarislabs/logger/commit/2f4a52c2bff1f7d19a15af63d8cf7adac18171f9))
+- **container:** Improve prefix wrapping and add color continuity ([3375ddc](https://github.com/amarislabs/logger/commit/3375ddc14438b7a45834d28d5dfb9cf9635aca57))
+
+## <!-- 1 -->Bug Fixes
+
+- Update security advisory link to correct repository ([29d38e8](https://github.com/amarislabs/logger/commit/29d38e8a6a5cd96d2afef8e5cd1db7fb155d3307))
+- **default:** Correct type colon display logic with date options ([daa4afa](https://github.com/amarislabs/logger/commit/daa4afab066fa06cb9e6f9bd6df0ec880e339d43))
+
+## <!-- 2 -->Documentation
+
+- Update code of conduct and security policy ([2aa2f0f](https://github.com/amarislabs/logger/commit/2aa2f0f459ac67b06fda8f4886e5e549447cef49))
+
+## <!-- 4 -->Refactor
+
+- **container:** Extract message color logic into its own method ([602fa00](https://github.com/amarislabs/logger/commit/602fa005da4e3a98addfa8c64ea7cba42fd2dfb9))
+- **container:** Extract truncate logic into seperate method ([60081fa](https://github.com/amarislabs/logger/commit/60081fac2db72344ab75bc18e3c6a91908698765))
+- **container:** Simplify container reporter line processing ([1713aca](https://github.com/amarislabs/logger/commit/1713aca859db5cc9b79012c04e755c8fa131f5fd))
+
+## <!-- 6 -->Testing
+
+- Update tests for container and default reporters ([8847282](https://github.com/amarislabs/logger/commit/8847282db9edfb66d7f2dd72cb2ee084e4f40f66))
+
 # [1.1.2](https://github.com/amarislabs/logger/compare/v1.1.1...v1.1.2) (2025-03-01)
 
 ## <!-- 7 -->Miscellaneous Tasks
